@@ -12,8 +12,16 @@ class MessageThreadDetailTableViewController: UITableViewController {
     
     // MARK: - Properties
 
-    var messageThread: MessageThread?
-    var messageThreadController: MessageThreadController?
+    var messageThread: MessageThread? {
+        didSet {
+            print("Message thread: \(messageThread)")
+        }
+    }
+    var messageThreadController: MessageThreadController? {
+        didSet {
+            print("Message thread controller: \(messageThreadController)")
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,11 +55,13 @@ class MessageThreadDetailTableViewController: UITableViewController {
     // MARK: - Navigation
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "AddMesage" {
-            guard let destinationVC = segue.destination as? MessageDetailViewController else { return }
-            
-            destinationVC.messageThreadController = messageThreadController
-            destinationVC.messageThread = messageThread
+        if segue.identifier == "AddMessage" {
+            guard let nav = segue.destination as? UINavigationController, let detailVC = nav.topViewController as? MessageDetailViewController else { return }
+            detailVC.messageThreadController = messageThreadController
+            detailVC.messageThread = messageThread
+            print("made it through guard let")
+//            destinationVC.messageThreadController = messageThreadController
+//            destinationVC.messageThread = messageThread
         }
     }
 }

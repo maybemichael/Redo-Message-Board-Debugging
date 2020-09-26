@@ -12,8 +12,16 @@ class MessageDetailViewController: UIViewController {
     
     // MARK: - Properties
     
-    var messageThreadController: MessageThreadController?
-    var messageThread: MessageThread?
+    var messageThreadController: MessageThreadController? {
+        didSet {
+            print("Message Thread Controller: \(messageThreadController)")
+        }
+    }
+    var messageThread: MessageThread? {
+        didSet {
+            print("Message Thread: \(messageThread)")
+        }
+    }
 
     @IBOutlet weak var senderNameTextField: UITextField!
     @IBOutlet weak var messageTextView: UITextView!

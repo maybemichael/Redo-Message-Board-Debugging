@@ -12,14 +12,21 @@ import XCTest
 class MessageThreadTests: XCTestCase {
     
     var controller: MessageThreadController?
+    var threadTableVC: MessageThreadsTableViewController?
+    var threadDetailTVC: MessageThreadDetailTableViewController?
     
     override func setUp() {
         super.setUp()
         controller = MessageThreadController()
+        let storyboard = UIStoryboard(name: "Main", bundle: Bundle.main)
+        threadTableVC = storyboard.instantiateViewController(identifier: "MessageThreadsTableViewController") as? MessageThreadsTableViewController
+        threadDetailTVC = storyboard.instantiateViewController(identifier: "MessageThreadDetailTableViewController") as? MessageThreadDetailTableViewController
     }
     
     override func tearDown() {
         controller = nil
+        threadTableVC = nil
+        threadDetailTVC = nil
         super.tearDown()
     }
     
@@ -40,7 +47,7 @@ class MessageThreadTests: XCTestCase {
     }
     
     func testMessageThreadDecode() throws {
-        let url = (controller?.mockDataURL)!
+        let url = controller!.mockDataURL
         var threads = [MessageThread]()
         do {
             let data = try Data(contentsOf: url)
@@ -51,5 +58,16 @@ class MessageThreadTests: XCTestCase {
         XCTAssertEqual(threads.count, 2)
         XCTAssertEqual(threads.first!.messages.first!.sender, "Joe")
         XCTAssertEqual(threads.first!.identifier, "FCAB7137-1D84-40F5-94A7-8931032DAF82")
+    }
+    
+    func testFirstSegue() {
+        XCTAssertNotNil(threadTableVC?.messageThreadController)
+        let identifiers = (threadTableVC?.value(forKey: "storyboardSegueTemplates") as? [AnyObject])?.compactMap({ $0.value(forKey: "identifier") as? String }) ?? []
+        XCTAssertEqual(identifiers.first!, "ViewMessageThread")
+    }
+    
+    func testSecondSegue() {
+        let identifiers = (threadDetailTVC?.value(forKey: "storyboardSegueTemplates") as? [AnyObject])?.compactMap({ $0.value(forKey: "identifier") as? String }) ?? []
+        XCTAssertEqual(identifiers.first!, "AddMessage")
     }
 }
