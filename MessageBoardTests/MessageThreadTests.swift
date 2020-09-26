@@ -38,4 +38,18 @@ class MessageThreadTests: XCTestCase {
         }
         wait(for: [expectation], timeout: 5)
     }
+    
+    func testMessageThreadDecode() throws {
+        let url = (controller?.mockDataURL)!
+        var threads = [MessageThread]()
+        do {
+            let data = try Data(contentsOf: url)
+            threads = try Array(JSONDecoder().decode([String: MessageThread].self, from: data).values)
+        } catch {
+            XCTFail("Error decoding message threads: \(error)")
+        }
+        XCTAssertEqual(threads.count, 2)
+        XCTAssertEqual(threads.first!.messages.first!.sender, "Joe")
+        XCTAssertEqual(threads.first!.identifier, "FCAB7137-1D84-40F5-94A7-8931032DAF82")
+    }
 }
