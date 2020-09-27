@@ -12,16 +12,8 @@ class MessageThreadDetailTableViewController: UITableViewController {
     
     // MARK: - Properties
 
-    var messageThread: MessageThread? {
-        didSet {
-            print("Message thread: \(messageThread)")
-        }
-    }
-    var messageThreadController: MessageThreadController? {
-        didSet {
-            print("Message thread controller: \(messageThreadController)")
-        }
-    }
+    var messageThread: MessageThread?
+    var messageThreadController: MessageThreadController?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,8 +23,9 @@ class MessageThreadDetailTableViewController: UITableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        self.tableView.reloadData()
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
     }
     
     // MARK: - UITableViewDataSource
@@ -59,9 +52,6 @@ class MessageThreadDetailTableViewController: UITableViewController {
             guard let nav = segue.destination as? UINavigationController, let detailVC = nav.topViewController as? MessageDetailViewController else { return }
             detailVC.messageThreadController = messageThreadController
             detailVC.messageThread = messageThread
-            print("made it through guard let")
-//            destinationVC.messageThreadController = messageThreadController
-//            destinationVC.messageThread = messageThread
         }
     }
 }

@@ -9,24 +9,29 @@
 import XCTest
 @testable import Message_Board
 
-class MessageThreadTests: XCTestCase {
+class MessageThreadTests: XCTestCase, UITableViewDelegate {
     
     var controller: MessageThreadController?
-    var threadTableVC: MessageThreadsTableViewController?
+    var threadTVC: MessageThreadsTableViewController?
     var threadDetailTVC: MessageThreadDetailTableViewController?
+    var detailVC: MessageDetailViewController?
+    var storyboard: UIStoryboard?
     
     override func setUp() {
         super.setUp()
         controller = MessageThreadController()
-        let storyboard = UIStoryboard(name: "Main", bundle: Bundle.main)
-        threadTableVC = storyboard.instantiateViewController(identifier: "MessageThreadsTableViewController") as? MessageThreadsTableViewController
-        threadDetailTVC = storyboard.instantiateViewController(identifier: "MessageThreadDetailTableViewController") as? MessageThreadDetailTableViewController
+        storyboard = UIStoryboard(name: "Main", bundle: .main)
+        threadTVC = storyboard?.instantiateViewController(identifier: "MessageThreadsTableViewController") as? MessageThreadsTableViewController
+        threadDetailTVC = storyboard?.instantiateViewController(identifier: "MessageThreadDetailTableViewController") as? MessageThreadDetailTableViewController
+        detailVC = storyboard?.instantiateViewController(identifier: "MessageDetailViewController") as? MessageDetailViewController
     }
     
     override func tearDown() {
         controller = nil
-        threadTableVC = nil
+        threadTVC = nil
         threadDetailTVC = nil
+        storyboard = nil
+        detailVC = nil
         super.tearDown()
     }
     
@@ -52,22 +57,50 @@ class MessageThreadTests: XCTestCase {
         do {
             let data = try Data(contentsOf: url)
             threads = try Array(JSONDecoder().decode([String: MessageThread].self, from: data).values)
+            XCTAssertNoThrow(try Array(JSONDecoder().decode([String: MessageThread].self, from: data).values))
         } catch {
             XCTFail("Error decoding message threads: \(error)")
         }
         XCTAssertEqual(threads.count, 2)
-        XCTAssertEqual(threads.first!.messages.first!.sender, "Joe")
-        XCTAssertEqual(threads.first!.identifier, "FCAB7137-1D84-40F5-94A7-8931032DAF82")
     }
     
     func testFirstSegue() {
-        XCTAssertNotNil(threadTableVC?.messageThreadController)
-        let identifiers = (threadTableVC?.value(forKey: "storyboardSegueTemplates") as? [AnyObject])?.compactMap({ $0.value(forKey: "identifier") as? String }) ?? []
+        XCTAssertNotNil(threadTVC?.messageThreadController)
+        let identifiers = (threadTVC?.value(forKey: "storyboardSegueTemplates") as? [AnyObject])?.compactMap({ $0.value(forKey: "identifier") as? String }) ?? []
         XCTAssertEqual(identifiers.first!, "ViewMessageThread")
     }
     
     func testSecondSegue() {
         let identifiers = (threadDetailTVC?.value(forKey: "storyboardSegueTemplates") as? [AnyObject])?.compactMap({ $0.value(forKey: "identifier") as? String }) ?? []
         XCTAssertEqual(identifiers.first!, "AddMessage")
+    }
+    
+    func testSegueToMessageThreadDetailVC() {
+        let segue = UIStoryboardSegue(identifier: "ViewMessageThread", source: threadTVC!, destination: threadDetailTVC!)
+        let message = MessageThread.Message(text: "Some Message", sender: "Miguelito", timestamp: Date())
+        threadTVC?.messageThreadController.messageThreads.append(MessageThread(title: "Test Thread", messages: [message], identifier: UUID().uuidString))
+        threadTVC?.tableView.selectRow(at: [0, 0], animated: false, scrollPosition: .top)
+        threadTVC?.prepare(for: segue, sender: nil)
+        XCTAssertNotNil(threadDetailTVC?.messageThreadController)
+        XCTAssertNotNil(threadDetailTVC?.messageThread)
+    }
+    
+    func testSegueToMessageDetailVC() {
+        let segue = UIStoryboardSegue(identifier: "ViewMessageThread", source: threadTVC!, destination: threadDetailTVC!)
+        let message = MessageThread.Message(text: "Some Message", sender: "Miguelito", timestamp: Date())
+        let thread = MessageThread(title: "Test Thread", messages: [message], identifier: UUID().uuidString)
+        threadTVC?.messageThreadController.messageThreads.append(MessageThread(title: "Test Thread", messages: [message], identifier: UUID().uuidString))
+        threadTVC?.tableView.selectRow(at: [0, 0], animated: false, scrollPosition: .top)
+        threadTVC?.prepare(for: segue, sender: nil)
+        XCTAssertNotNil(threadDetailTVC?.messageThreadController)
+        XCTAssertNotNil(threadDetailTVC?.messageThread)
+
+        let nav = storyboard?.instantiateViewController(identifier: "DetailNavController") as! UINavigationController
+        detailVC = nav.topViewController as? MessageDetailViewController
+        threadDetailTVC?.messageThreadController?.messageThreads.append(thread)
+        let secondSegue = UIStoryboardSegue(identifier: "AddMessage", source: threadDetailTVC!, destination: nav)
+        threadDetailTVC?.prepare(for: secondSegue, sender: nil)
+        XCTAssertNotNil(detailVC?.messageThreadController)
+        XCTAssertNotNil(detailVC?.messageThread)
     }
 }
